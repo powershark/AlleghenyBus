@@ -1,8 +1,6 @@
-package com.example.alleghenybus.xmlparser;
+package com.example.alleghenybus.Xmlparser;
 
 import android.util.Xml;
-
-import com.example.alleghenybus.beans.RoutesBean;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -16,9 +14,9 @@ import java.util.List;
  * Created by LBB on 4/30/17.
  */
 
-public class GetRoutesXmlParser {
+public class GetRouteDirectionsXmlParser {
     private static final String ns = null;
-    public List parse(InputStream in) throws XmlPullParserException, IOException {
+    public List<String> parse(InputStream in) throws XmlPullParserException, IOException {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -29,8 +27,9 @@ public class GetRoutesXmlParser {
             in.close();
         }
     }
-    private List readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
-        List entries = new ArrayList();
+
+    private List<String> readFeed(XmlPullParser parser) throws XmlPullParserException, IOException {
+        List<String> entries = new ArrayList<String>();
 
         parser.require(XmlPullParser.START_TAG, ns, "bustime-response");
         while (parser.next() != XmlPullParser.END_TAG) {
@@ -39,8 +38,8 @@ public class GetRoutesXmlParser {
             }
             String name = parser.getName();
             // Starts by looking for the entry tag
-            if (name.equals("route")) {
-                entries.add(readEntry(parser));
+            if (name.equals("dir")) {
+                entries.add(readDir(parser));
             } else {
                 skip(parser);
             }
@@ -48,38 +47,11 @@ public class GetRoutesXmlParser {
         return entries;
     }
 
-    private RoutesBean readEntry(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, ns, "route");
-        String routeId = null;
-        String routName = null;
-        while (parser.next() != XmlPullParser.END_TAG) {
-            if (parser.getEventType() != XmlPullParser.START_TAG) {
-                continue;
-            }
-            String name = parser.getName();
-            if (name.equals("rt")) {
-                routeId = readRt(parser);
-            } else if (name.equals("rtnm")) {
-                routName = readRtnm(parser);
-            } else {
-                skip(parser);
-            }
-        }
-        return new RoutesBean(routeId, routName);
-    }
-
-    private String readRt (XmlPullParser parser) throws IOException, XmlPullParserException {
-        parser.require(XmlPullParser.START_TAG, ns, "rt");
-        String rt = readText(parser);
-        parser.require(XmlPullParser.END_TAG, ns, "rt");
-        return rt;
-    }
-
-    private String readRtnm (XmlPullParser parser) throws IOException, XmlPullParserException {
-        parser.require(XmlPullParser.START_TAG, ns, "rtnm");
-        String rtnm = readText(parser);
-        parser.require(XmlPullParser.END_TAG, ns, "rtnm");
-        return rtnm;
+    private String readDir (XmlPullParser parser) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, ns, "dir");
+        String dir = readText(parser);
+        parser.require(XmlPullParser.END_TAG, ns, "dir");
+        return dir;
     }
 
     private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -107,5 +79,4 @@ public class GetRoutesXmlParser {
             }
         }
     }
-
 }

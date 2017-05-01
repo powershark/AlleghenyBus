@@ -1,4 +1,4 @@
-package com.example.alleghenybus.beans;
+package com.example.alleghenybus.Beans;
 
 /**
  * Created by LBB on 4/30/17.

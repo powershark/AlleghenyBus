@@ -1,8 +1,8 @@
-package com.example.alleghenybus.xmlparser;
+package com.example.alleghenybus.Xmlparser;
 
 import android.util.Xml;
 
-import com.example.alleghenybus.beans.StopsBean;
+import com.example.alleghenybus.Beans.StopsBean;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

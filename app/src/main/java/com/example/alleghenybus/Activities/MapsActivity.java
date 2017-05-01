@@ -1,10 +1,12 @@
-package com.example.alleghenybus;
+package com.example.alleghenybus.Activities;
 
-import com.example.alleghenybus.beans.RoutesBean;
-import com.example.alleghenybus.beans.StopsBean;
-import com.example.alleghenybus.xmlparser.GetRouteDirectionsXmlParser;
-import com.example.alleghenybus.xmlparser.GetRoutesXmlParser;
-import com.example.alleghenybus.xmlparser.GetStopsXmlParser;
+import com.example.alleghenybus.Utils.PermissionUtils;
+import com.example.alleghenybus.R;
+import com.example.alleghenybus.Beans.RoutesBean;
+import com.example.alleghenybus.Beans.StopsBean;
+import com.example.alleghenybus.Xmlparser.GetRouteDirectionsXmlParser;
+import com.example.alleghenybus.Xmlparser.GetRoutesXmlParser;
+import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
@@ -70,11 +72,6 @@ public class MapsActivity extends AppCompatActivity
     private Marker mSelectedMarker;
 
     private class InfoGenerator implements Runnable {
-        private String type;
-
-        public InfoGenerator(String type) {
-            this.type = type;
-        }
 
         @Override
         public void run() {
@@ -134,23 +131,28 @@ public class MapsActivity extends AppCompatActivity
 
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMarkerClickListener(this);
-        generateInfo();
         enableMyLocation();
         focusOnCurrentLocation();
+        Toast.makeText(this, "Geting Stops", Toast.LENGTH_SHORT).show();
+        generateInfo();
     }
 
+    //Get info of routes&stops
     public void generateInfo() {
-        InfoGenerator p = new InfoGenerator("getRoutes");
+        //create a thread to do the http requests
+        InfoGenerator p = new InfoGenerator();
         Thread t = new Thread(p);
         t.start();
+        //check if the thread is done
         while(t.isAlive()) try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        //if done, put the markers on the map
         for(int i = 0; i < stopList.size(); i++)
             addMarkersToMap(stopList.get(i));
-        Toast.makeText(this, "get", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Stops got", Toast.LENGTH_SHORT).show();
     }
 
     private void addMarkersToMap(StopsBean stop) {
@@ -218,25 +220,21 @@ public class MapsActivity extends AppCompatActivity
         } else {
             LocationListener locationListener = new LocationListener() {
 
-                // Provider的状态在可用、暂时不可用和无服务三个状态直接切换时触发此函数
                 @Override
                 public void onStatusChanged(String provider, int status, Bundle extras) {
 
                 }
 
-                // Provider被enable时触发此函数，比如GPS被打开
                 @Override
                 public void onProviderEnabled(String provider) {
 
                 }
 
-                // Provider被disable时触发此函数，比如GPS被关闭
                 @Override
                 public void onProviderDisabled(String provider) {
 
                 }
 
-                //当坐标改变时触发此函数，如果Provider传进相同的坐标，它就不会被触发
                 @Override
                 public void onLocationChanged(Location location) {
                     if (location != null) {
@@ -249,8 +247,8 @@ public class MapsActivity extends AppCompatActivity
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
             Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             if (location != null) {
-                currentLatitude = location.getLatitude(); //经度
-                currentLongitude = location.getLongitude(); //纬度
+                currentLatitude = location.getLatitude();
+                currentLongitude = location.getLongitude();
             }
         }
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);

@@ -1,4 +1,4 @@
-package com.example.alleghenybus.beans;
+package com.example.alleghenybus.Beans;
 
 import java.util.List;
 
