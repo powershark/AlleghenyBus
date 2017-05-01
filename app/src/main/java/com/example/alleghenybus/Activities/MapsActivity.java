@@ -137,9 +137,9 @@ public class MapsActivity extends AppCompatActivity
         generateInfo();
     }
 
-    //Get info of routes&stops
+    //Get info of routes&stops and mark the stops
     public void generateInfo() {
-        //create a thread to do the http requests
+        //create a thread to do http requests
         InfoGenerator p = new InfoGenerator();
         Thread t = new Thread(p);
         t.start();
@@ -150,6 +150,7 @@ public class MapsActivity extends AppCompatActivity
             e.printStackTrace();
         }
         //if done, put the markers on the map
+        //note that we can only put markers on the main thread
         for(int i = 0; i < stopList.size(); i++)
             addMarkersToMap(stopList.get(i));
         Toast.makeText(this, "Stops got", Toast.LENGTH_SHORT).show();
