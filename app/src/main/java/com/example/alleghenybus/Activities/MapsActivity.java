@@ -7,12 +7,20 @@ import com.example.alleghenybus.Beans.StopsBean;
 import com.example.alleghenybus.Xmlparser.GetRouteDirectionsXmlParser;
 import com.example.alleghenybus.Xmlparser.GetRoutesXmlParser;
 import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
@@ -20,6 +28,9 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -29,14 +40,20 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -65,102 +82,167 @@ public class MapsActivity extends AppCompatActivity
      * {@link #onRequestPermissionsResult(int, String[], int[])}.
      */
     private boolean mPermissionDenied = false;
-
     private GoogleMap mMap;
     private List<RoutesBean> routeList;
     private List<StopsBean> stopList = new ArrayList<StopsBean>();
     private Marker mSelectedMarker;
-
-    private class InfoGenerator implements Runnable {
-
-        @Override
-        public void run() {
-            try {
-                //get routes
-                URL url = new URL("http://realtime.portauthority.org/bustime/api/v1/getroutes?key=5fYCfDAUi4ZteFN5bFpH9JRwW");
-                InputStream in = url.openStream();
-                GetRoutesXmlParser routesXmlParserparser = new GetRoutesXmlParser();
-                routeList = routesXmlParserparser.parse(in);
-
-                //get route directions
-                for (int i = 0; i < routeList.size(); i++) {
-                    url = new URL("http://realtime.portauthority.org/bustime/api/v1/getdirections?key=5fYCfDAUi4ZteFN5bFpH9JRwW&rt="
-                            + routeList.get(i).getRouteId());
-                    in = url.openStream();
-                    GetRouteDirectionsXmlParser routesDirectionXmlParser = new GetRouteDirectionsXmlParser();
-                    routeList.get(i).setRouteDirections(routesDirectionXmlParser.parse(in));
-                }
-
-                //get stops
-                for(int i = 0; i < routeList.size(); i++){
-                    for(int j = 0; j < routeList.get(i).getRouteDirections().size(); j++) {
-                        url = new URL("http://realtime.portauthority.org/bustime/api/v1/getstops?key=5fYCfDAUi4ZteFN5bFpH9JRwW&rt="
-                                + routeList.get(i).getRouteId() + "&dir=" + routeList.get(i).getRouteDirections().get(j));
-                        in = url.openStream();
-                        GetStopsXmlParser stopsXmlParser = new GetStopsXmlParser();
-                        List<StopsBean> temp = stopsXmlParser.parse(in);
-                        for(int k = 0; k < temp.size(); k++) {
-                            if (!stopList.contains(temp.get(k))) {
-                                stopList.add(temp.get(k));
-                            }
-                        }
-                    }
-                }
-                System.out.println(stopList.size());
-            } catch (XmlPullParserException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+    private HashMap<Integer, Marker> visibleMarkers = new HashMap<Integer, Marker>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
 
+
+        // Get the SupportMapFragment and register for the callback
+        // when the map is ready for use.
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        // For the auto complete fragment
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            public static final String TAG = "place fragment";
+            public Marker marker;
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                Log.i(TAG, "Place: " + place.getName());
+                if (marker!=null) marker.remove();
+                marker = mMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
+                marker.setIcon(BitmapDescriptorFactory.fromAsset("dest_marker.png"));
+                marker.setTag("Destination");
+                mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+//        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+//            @Override
+//            public void onCameraMove() {
+//
+//            }
+//        });
+
     }
 
+
+
+    /**
+     * Manipulates the map when it's available.
+     * The API invokes this callback when the map is ready for use.
+     */
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
 
+        try {
+            // Customise the styling of the base map using a JSON object defined
+            // in a raw resource file.
+            boolean success = mMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.map_style_json));
+
+            if (!success) {
+                Log.e("Map Styling" , "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e("Map Styling", "Can't find style. Error: ", e);
+        }
+
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMarkerClickListener(this);
         enableMyLocation();
+        // Focuses on current location
         focusOnCurrentLocation();
-        Toast.makeText(this, "Geting Stops", Toast.LENGTH_SHORT).show();
-        generateInfo();
+        // Gets all bus stops on the map
+       renderAllStops();
+
+
     }
 
-    //Get info of routes&stops and mark the stops
-    public void generateInfo() {
-        //create a thread to do http requests
-        InfoGenerator p = new InfoGenerator();
-        Thread t = new Thread(p);
-        t.start();
-        //check if the thread is done
-        while(t.isAlive()) try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
+
+//    private void addItemsToMap(List<StopsBean> items)
+//    {
+//        if(this.mMap != null)
+//        {
+//            //This is the current user-viewable region of the map
+//            LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
+//
+//            //Loop through all the items that are available to be placed on the map
+//            for(StopsBean item : items)
+//            {
+//
+//                //If the item is within the the bounds of the screen
+//                if(bounds.contains(new LatLng(item.getLatitute(), item.getLontitute())));
+//                {
+//                    //If the item isn't already being displayed
+//                    if(!visibleMarkers.containsKey(item.getStpId()))
+//                    {
+//                        //Add the Marker to the Map and keep track of it with the HashMap
+//                        //getMarkerForItem just returns a MarkerOptions object
+//                        this.visibleMarkers.put(item.getStpId(), this.mMap.addMarker(getMarkerForItem(item)));
+//                    }
+//                }
+//
+//                //If the marker is off screen
+//            else
+//                {
+//                    //If the course was previously on screen
+//                    if(visibleMarkers.containsKey(item.getStpId()))
+//                    {
+//                        //1. Remove the Marker from the GoogleMap
+//                       visibleMarkers.get(item.getStpId()).remove();
+//
+//                        //2. Remove the reference to the Marker from the HashMap
+//                        visibleMarkers.remove(item.getStpId());
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+
+
+
+
+    /**
+     * Renders all the bus stops on the map.
+     */
+    public void renderAllStops(){
+        try {
+            GetStopsXmlParser getStopsXmlParser = new GetStopsXmlParser();
+            List<StopsBean> stopsBeanList = getStopsXmlParser.parse(this.getResources().openRawResource(R.raw.stops));
+            for(StopsBean s : stopsBeanList){
+                addMarkersToMap(s);
+            }
+        } catch (XmlPullParserException | IOException e) {
             e.printStackTrace();
         }
-        //if done, put the markers on the map
-        //note that we can only put markers on the main thread
-        for(int i = 0; i < stopList.size(); i++)
-            addMarkersToMap(stopList.get(i));
-        Toast.makeText(this, "Stops got", Toast.LENGTH_SHORT).show();
     }
 
+
+    /**
+     * Function marks stopbeans on the map
+     * @param stop type StopBean
+     */
     private void addMarkersToMap(StopsBean stop) {
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
                 .title(stop.getStpName()));
     }
+
+
+    //Get info of routes&stops.xml and mark the stops.xml
+    
 
     @Override
     public boolean onMarkerClick(final Marker marker) {
