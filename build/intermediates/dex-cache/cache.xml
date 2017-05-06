@@ -3,12 +3,57 @@
 
     <item
         is-multidex="true"
+        jar="/Users/LBB/.android/build-cache/b663d324286e679894a179add9787d55561e1278/output/jars/classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="e4851331b3944beb6e7f77316a7661f53781da62">
+        <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_a6720db007f3c9252b2ec8c90f9789153775ca75/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/LBB/.android/build-cache/f8e030990d53ea59ee1703a6698c0b12d727a1bf/output/jars/classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="95519720620b553f63afc789beba9ad582807f7c">
+        <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_e6c00da4068dd86d15b0dbbc010166f91a0e45fd/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/LBB/.android/build-cache/ab68bfbbe86a37a0589ae5694dec82edcfc62f34/output/jars/classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="d4cf6227dd6a2ceff0f7dcf0c324380b7abf2c28">
+        <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_d42e989fbadb885ba95e3f4a928d3c9be39eb125/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/LBB/.android/build-cache/4172f1803d079ba0758cd2d530aa834dd4599001/output/jars/classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="914f5d3e3ace66080e59613708f06d129a222e25">
+        <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_95fefa5eb43931462f6cc441676e33fef51874da/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
         jar="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/incremental-classes/debug/instant-run-bootstrap.jar"
         jumboMode="true"
         optimize="true"
         revision="25.0.3"
-        sha1="4bebc0dca9aebdbf9864a3764469c6e811637fb6">
+        sha1="7dc9a621913b97c62f33fad44e6368bd6c315472">
         <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10000/instant-run-bootstrap_f67c79a98fce7f03e60313ef02d05c0a4cbf3399/classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="/Users/LBB/.android/build-cache/ad5a27773b6b384abd4daac02d20593e5207fd9c/output/jars/classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="25.0.3"
+        sha1="38789e20ace9ab7dbd00554bd2673ab424478d3b">
+        <dex dex="/Users/LBB/AndroidStudioProjects/Git/AlleghenyBus/app/build/intermediates/transforms/dex/debug/folders/1000/10/classes_722304c352ed7b48306ed3b6d62420533954296e/classes.dex" />
     </item>
     <item
         is-multidex="true"

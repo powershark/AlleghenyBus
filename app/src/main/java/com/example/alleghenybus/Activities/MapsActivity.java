@@ -27,6 +27,7 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.Address;
@@ -36,11 +37,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -87,13 +91,14 @@ public class MapsActivity extends AppCompatActivity
     private List<StopsBean> stopList = new ArrayList<StopsBean>();
     private Marker mSelectedMarker;
     private HashMap<Integer, Marker> visibleMarkers = new HashMap<Integer, Marker>();
+    private FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
-
+        fab = (FloatingActionButton)findViewById(R.id.fab);
 
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
@@ -116,6 +121,8 @@ public class MapsActivity extends AppCompatActivity
                 marker = mMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
                 marker.setIcon(BitmapDescriptorFactory.fromAsset("dest_marker.png"));
                 marker.setTag("Destination");
+                marker.setSnippet(place.getName().toString());
+                marker.setTitle(place.getName().toString());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
             }
 
@@ -133,8 +140,11 @@ public class MapsActivity extends AppCompatActivity
 //        });
 
     }
-
-
+    //Jump to BookMark activity
+    public void onFabClicked(View v){
+        Intent intent = new Intent(MapsActivity.this,BookMarkAvtivity.class);
+        startActivityForResult(intent,1);
+    }
 
     /**
      * Manipulates the map when it's available.
@@ -143,7 +153,8 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
-
+        //to show the my location bar
+        mMap.setPadding(0,200,0,0);
         try {
             // Customise the styling of the base map using a JSON object defined
             // in a raw resource file.
