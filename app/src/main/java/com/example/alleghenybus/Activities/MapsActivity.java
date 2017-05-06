@@ -110,6 +110,7 @@ public class MapsActivity extends AppCompatActivity
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
+
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             public static final String TAG = "place fragment";
             public Marker marker;
@@ -124,6 +125,7 @@ public class MapsActivity extends AppCompatActivity
                 marker.setSnippet(place.getName().toString());
                 marker.setTitle(place.getName().toString());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+
             }
 
             @Override
@@ -132,12 +134,6 @@ public class MapsActivity extends AppCompatActivity
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
-//        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
-//            @Override
-//            public void onCameraMove() {
-//
-//            }
-//        });
 
     }
     //Jump to BookMark activity
@@ -174,53 +170,12 @@ public class MapsActivity extends AppCompatActivity
         enableMyLocation();
         // Focuses on current location
         focusOnCurrentLocation();
+
         // Gets all bus stops on the map
-       renderAllStops();
+        renderAllStops();
 
 
     }
-
-
-//    private void addItemsToMap(List<StopsBean> items)
-//    {
-//        if(this.mMap != null)
-//        {
-//            //This is the current user-viewable region of the map
-//            LatLngBounds bounds = this.mMap.getProjection().getVisibleRegion().latLngBounds;
-//
-//            //Loop through all the items that are available to be placed on the map
-//            for(StopsBean item : items)
-//            {
-//
-//                //If the item is within the the bounds of the screen
-//                if(bounds.contains(new LatLng(item.getLatitute(), item.getLontitute())));
-//                {
-//                    //If the item isn't already being displayed
-//                    if(!visibleMarkers.containsKey(item.getStpId()))
-//                    {
-//                        //Add the Marker to the Map and keep track of it with the HashMap
-//                        //getMarkerForItem just returns a MarkerOptions object
-//                        this.visibleMarkers.put(item.getStpId(), this.mMap.addMarker(getMarkerForItem(item)));
-//                    }
-//                }
-//
-//                //If the marker is off screen
-//            else
-//                {
-//                    //If the course was previously on screen
-//                    if(visibleMarkers.containsKey(item.getStpId()))
-//                    {
-//                        //1. Remove the Marker from the GoogleMap
-//                       visibleMarkers.get(item.getStpId()).remove();
-//
-//                        //2. Remove the reference to the Marker from the HashMap
-//                        visibleMarkers.remove(item.getStpId());
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
 
 
 
@@ -248,7 +203,7 @@ public class MapsActivity extends AppCompatActivity
     private void addMarkersToMap(StopsBean stop) {
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
-                .title(stop.getStpName()));
+                .title(stop.getStpName()).icon(BitmapDescriptorFactory.fromAsset("bus_stop.png")));
     }
 
 
