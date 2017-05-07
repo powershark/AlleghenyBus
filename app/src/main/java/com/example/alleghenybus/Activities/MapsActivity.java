@@ -4,8 +4,6 @@ import com.example.alleghenybus.Utils.PermissionUtils;
 import com.example.alleghenybus.R;
 import com.example.alleghenybus.Beans.RoutesBean;
 import com.example.alleghenybus.Beans.StopsBean;
-import com.example.alleghenybus.Xmlparser.GetRouteDirectionsXmlParser;
-import com.example.alleghenybus.Xmlparser.GetRoutesXmlParser;
 import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
@@ -17,21 +15,19 @@ import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
 import android.Manifest;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -43,21 +39,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.Toast;
 
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -90,8 +76,9 @@ public class MapsActivity extends AppCompatActivity
     private List<RoutesBean> routeList;
     private List<StopsBean> stopList = new ArrayList<StopsBean>();
     private Marker mSelectedMarker;
-    private HashMap<Integer, Marker> visibleMarkers = new HashMap<Integer, Marker>();
+    private List<Marker> stopMarkerList = new ArrayList<>();
     private FloatingActionButton fab;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +101,8 @@ public class MapsActivity extends AppCompatActivity
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             public static final String TAG = "place fragment";
             public Marker marker;
+            FragmentManager fragmentManager = getFragmentManager();
+            RoutesFragment routesFragment;
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
@@ -125,7 +114,16 @@ public class MapsActivity extends AppCompatActivity
                 marker.setSnippet(place.getName().toString());
                 marker.setTitle(place.getName().toString());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                if(routesFragment==null) {
+                    routesFragment = new RoutesFragment();
+                    fragmentTransaction.add(R.id.fragment_container, routesFragment, "routes");
 
+                } else {
+                    fragmentTransaction.detach(routesFragment);
+                    fragmentTransaction.attach(routesFragment);
+                }
+                fragmentTransaction.commit();
             }
 
             @Override
@@ -135,7 +133,11 @@ public class MapsActivity extends AppCompatActivity
             }
         });
 
+
+
     }
+
+
     //Jump to BookMark activity
     public void onFabClicked(View v){
         Intent intent = new Intent(MapsActivity.this,BookMarkAvtivity.class);
@@ -174,8 +176,25 @@ public class MapsActivity extends AppCompatActivity
         // Gets all bus stops on the map
         renderAllStops();
 
-
+        mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+            @Override
+            public void onCameraMoveStarted(int i) {
+                if(mMap.getCameraPosition().zoom<17.00){
+                    for (Marker m : stopMarkerList){
+                        m.setVisible(false);
+                    }
+                } else {
+                    for (Marker m : stopMarkerList){
+                        m.setVisible(true);
+                    }
+                }
+                Log.e("ZOOM", String.valueOf(mMap.getCameraPosition().zoom));
+            }
+        });
     }
+
+
+
 
 
 
@@ -201,9 +220,11 @@ public class MapsActivity extends AppCompatActivity
      * @param stop type StopBean
      */
     private void addMarkersToMap(StopsBean stop) {
-        mMap.addMarker(new MarkerOptions()
+       Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
                 .title(stop.getStpName()).icon(BitmapDescriptorFactory.fromAsset("bus_stop.png")));
+        marker.setTag("bus_stops");
+        stopMarkerList.add(marker);
     }
 
 
