@@ -54,6 +54,7 @@ public class GetStopsXmlParser {
         String stpName = null;
         double latitute = 0;
         double lontitute = 0;
+        List<String> routes = new ArrayList<String>();
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
@@ -72,12 +73,15 @@ public class GetStopsXmlParser {
                 case "lon":
                     lontitute = Double.parseDouble(readLon(parser));
                     break;
+                case "rt":
+                    routes.add(readRoutes(parser));
+                    break;
                 default:
                     skip(parser);
                     break;
             }
         }
-        return new StopsBean(stpId, stpName, latitute, lontitute);
+        return new StopsBean(stpId, stpName, latitute, lontitute, routes);
     }
 
     private String readStpid(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -106,6 +110,13 @@ public class GetStopsXmlParser {
         String lon = readText(parser);
         parser.require(XmlPullParser.END_TAG, ns, "lon");
         return lon;
+    }
+
+    private String readRoutes(XmlPullParser parser) throws IOException, XmlPullParserException {
+        parser.require(XmlPullParser.START_TAG, ns, "rt");
+        String route = readText(parser);
+        parser.require(XmlPullParser.END_TAG, ns, "rt");
+        return route;
     }
 
     private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {

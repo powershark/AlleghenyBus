@@ -16,6 +16,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -39,6 +40,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -57,6 +59,7 @@ public class MapsActivity extends AppCompatActivity
         implements
         OnMyLocationButtonClickListener,
         OnMapReadyCallback,
+        OnInfoWindowClickListener,
         OnMarkerClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -205,10 +208,11 @@ public class MapsActivity extends AppCompatActivity
     public void renderAllStops(){
         try {
             GetStopsXmlParser getStopsXmlParser = new GetStopsXmlParser();
-            List<StopsBean> stopsBeanList = getStopsXmlParser.parse(this.getResources().openRawResource(R.raw.stops));
-            for(StopsBean s : stopsBeanList){
+            stopList = getStopsXmlParser.parse(this.getResources().openRawResource(R.raw.stops));
+            for(StopsBean s : stopList){
                 addMarkersToMap(s);
             }
+
         } catch (XmlPullParserException | IOException e) {
             e.printStackTrace();
         }
@@ -220,13 +224,25 @@ public class MapsActivity extends AppCompatActivity
      * @param stop type StopBean
      */
     private void addMarkersToMap(StopsBean stop) {
-       Marker marker = mMap.addMarker(new MarkerOptions()
+        List<String> routes = stop.getRoutes();
+        StringBuilder snip = new StringBuilder("Routes: ");
+        for(String s : routes){
+            snip.append(s + ", ");
+        }
+        snip.delete(snip.length() - 2, snip.length());
+
+        Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
-                .title(stop.getStpName()).icon(BitmapDescriptorFactory.fromAsset("bus_stop.png")));
+                .title(stop.getStpName()).snippet(snip.toString()).icon(BitmapDescriptorFactory.fromAsset("bus_stop.png"))
+                .zIndex(Float.valueOf(stop.getStpId())));
         marker.setTag("bus_stops");
         stopMarkerList.add(marker);
     }
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
+    }
 
     //Get info of routes&stops.xml and mark the stops.xml
     
@@ -245,11 +261,12 @@ public class MapsActivity extends AppCompatActivity
         }
 
         mSelectedMarker = marker;
-
         // Return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur.
         return false;
     }
+
+
 
     /**
      * Enables the My Location layer if the fine location permission has been granted.
