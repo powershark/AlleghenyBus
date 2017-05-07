@@ -1,5 +1,11 @@
 package com.example.alleghenybus.Activities;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.alleghenybus.Utils.PermissionUtils;
 import com.example.alleghenybus.R;
 import com.example.alleghenybus.Beans.RoutesBean;
@@ -23,7 +29,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
 import android.Manifest;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -47,7 +52,9 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -80,6 +87,7 @@ public class MapsActivity extends AppCompatActivity
     private List<RoutesBean> routeList;
     private List<StopsBean> stopList = new ArrayList<StopsBean>();
     private Marker mSelectedMarker;
+    private Map<Marker,StopsBean> stopMarkerMap = new HashMap<>();
     private List<Marker> stopMarkerList = new ArrayList<>();
     private FloatingActionButton fab;
 
@@ -238,17 +246,37 @@ public class MapsActivity extends AppCompatActivity
 
         Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
-                .title(stop.getStpName()).snippet(snip.toString()).icon(BitmapDescriptorFactory.fromAsset("bus_stop.png"))
-                .zIndex(Float.valueOf(stop.getStpId())));
+                .title(stop.getStpName()));
         marker.setTag("bus_stops");
         stopMarkerList.add(marker);
+        stopMarkerMap.put(marker,stop);
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
+        if (stopMarkerMap.containsKey(marker)) {
+            RequestQueue queue = Volley.newRequestQueue(this);
+            String url ="http://realtime.portauthority.org/bustime/api/v3/getpredictions?key=5fYCfDAUi4ZteFN5bFpH9JRwW&stpid="+stopMarkerMap.get(marker).getStpId()+"&rtpidatafeed=Port%20Authority%20Bus";
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            // Display the first 500 characters of the response string.
+                            Intent stopRoutesIntent = new Intent(getBaseContext(),PredictionActivity.class);
+                            stopRoutesIntent.putExtra("xmlResponse",response);
+                            getBaseContext().startActivity(stopRoutesIntent);
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("error","No Internet Connection/PAAC API down");
+                }
+            });
+            // Add the request to the RequestQueue.
+            queue.add(stringRequest);
+        }
+
         Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(MapsActivity.this,PredictionActivity.class);
-        startActivityForResult(intent,1);
     }
 
     //Get info of routes&stops.xml and mark the stops.xml

@@ -2,18 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:weightSum="3">
     <android.support.v7.widget.AppCompatTextView
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="61C"
         android:id="@+id/rtid"
-        android:layout_marginLeft="3dp"
+        android:gravity="center"
+        android:layout_weight="1"
         android:textSize="30sp"
-        android:padding="12dp"/>
+        android:padding="12dp"
+        />
 
     <android.support.v7.widget.AppCompatTextView
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:id="@+id/des"
         android:gravity="center"
@@ -21,10 +24,12 @@
         android:layout_weight="1"/>
 
     <android.support.v7.widget.AppCompatTextView
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="5 min"
+        android:gravity="right"
         android:layout_marginRight="3dp"
+        android:layout_weight="1"
         android:id="@+id/prd"
         android:textSize="30sp"
         android:padding="12dp"/>
