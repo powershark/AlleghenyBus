@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.example.alleghenybus.R;
 
 
-public class BookMarkAvtivity extends AppCompatActivity {
+public class BookMarkActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

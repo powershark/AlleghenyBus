@@ -42,8 +42,16 @@
         </activity>
 
         <activity
-            android:name=".Activities.BookMarkAvtivity"
+            android:name=".Activities.BookMarkActivity"
             android:label="BookMarks">
+        </activity>
+        <activity
+            android:name=".Activities.SelectRouteActivity"
+            android:label="SelectRoute">
+        </activity>
+        <activity
+            android:name=".Activities.PredictionActivity"
+            android:label="Predictions">
         </activity>
     </application>
 

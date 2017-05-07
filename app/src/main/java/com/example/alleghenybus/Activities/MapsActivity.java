@@ -23,6 +23,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
 import android.Manifest;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
@@ -82,14 +83,12 @@ public class MapsActivity extends AppCompatActivity
     private List<Marker> stopMarkerList = new ArrayList<>();
     private FloatingActionButton fab;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
         fab = (FloatingActionButton)findViewById(R.id.fab);
-
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
         SupportMapFragment mapFragment =
@@ -140,10 +139,15 @@ public class MapsActivity extends AppCompatActivity
 
     }
 
+    //Jump to RouteSelect activity
+    public void onRecommendRouteFragmentClicked(View v){
+        Intent intent = new Intent(MapsActivity.this,SelectRouteActivity.class);
+        startActivityForResult(intent,1);
+    }
 
     //Jump to BookMark activity
     public void onFabClicked(View v){
-        Intent intent = new Intent(MapsActivity.this,BookMarkAvtivity.class);
+        Intent intent = new Intent(MapsActivity.this,BookMarkActivity.class);
         startActivityForResult(intent,1);
     }
 
@@ -156,6 +160,7 @@ public class MapsActivity extends AppCompatActivity
         mMap = map;
         //to show the my location bar
         mMap.setPadding(0,200,0,0);
+        mMap.setOnInfoWindowClickListener(this);
         try {
             // Customise the styling of the base map using a JSON object defined
             // in a raw resource file.
@@ -242,6 +247,8 @@ public class MapsActivity extends AppCompatActivity
     @Override
     public void onInfoWindowClick(Marker marker) {
         Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(MapsActivity.this,PredictionActivity.class);
+        startActivityForResult(intent,1);
     }
 
     //Get info of routes&stops.xml and mark the stops.xml
