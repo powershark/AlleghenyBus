@@ -3,7 +3,6 @@ package com.example.alleghenybus.Activities;
 import android.Manifest;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,6 +19,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.LinearLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -30,7 +30,6 @@ import com.android.volley.toolbox.Volley;
 import com.example.alleghenybus.Beans.StopRoute;
 import com.example.alleghenybus.Beans.StopsBean;
 import com.example.alleghenybus.R;
-import com.example.alleghenybus.Utils.AppPreference;
 import com.example.alleghenybus.Utils.PermissionUtils;
 import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
 import com.google.android.gms.common.api.Status;
@@ -49,7 +48,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.TileOverlay;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -66,7 +64,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -124,15 +121,21 @@ public class MapsActivity extends AppCompatActivity
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             public static final String TAG = "place fragment";
             public Marker marker;
             FragmentManager fragmentManager = getFragmentManager();
             RoutesFragment routesFragment;
+            PlaceAutocompleteFragment fromAutocompleteFragment = (PlaceAutocompleteFragment)
+                    getFragmentManager().findFragmentById(R.id.from_place_autocomplete_fragment);
+            LinearLayout fromSearchBarLayout = (LinearLayout)findViewById(R.id.fromSearchBarLayout);
+            View line = findViewById(R.id.theLine);
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
+                fromAutocompleteFragment.setHint("Current Location");
+                fromSearchBarLayout.setVisibility(View.VISIBLE);
+                line.setVisibility(View.VISIBLE);
                 Log.i(TAG, "Place: " + place.getName());
                 if (marker!=null) marker.remove();
                 marker = mMap.addMarker(new MarkerOptions().position(place.getLatLng()).draggable(true));
@@ -301,7 +304,7 @@ public class MapsActivity extends AppCompatActivity
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
                 .title(stop.getStpName()));
 //        marker.setSnippet(snip.toString());
-        marker.setIcon(BitmapDescriptorFactory.fromAsset("bus_marker.png"));
+//        marker.setIcon(BitmapDescriptorFactory.fromAsset("bus_marker.png"));
         marker.setTag("bus_stops");
         stopMarkerList.add(marker);
         stopMarkerMap.put(marker,stop);
