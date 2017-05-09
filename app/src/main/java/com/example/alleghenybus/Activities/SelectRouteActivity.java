@@ -10,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import com.example.alleghenybus.Beans.StopRoute;
 import com.example.alleghenybus.R;
 
 import java.util.ArrayList;
@@ -20,11 +21,14 @@ import java.util.Map;
 public class SelectRouteActivity extends AppCompatActivity{
     private ListView list;
     private List<Map<String,Object>> mDataList = new ArrayList<Map<String,Object>>();
+    private List<StopRoute> topStopsList;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_route);
+        Intent i = getIntent();
+        topStopsList = (List<StopRoute>) i.getSerializableExtra("topStopsList");
         list = (ListView)findViewById(R.id.routeList);
         setUpData();
         SimpleAdapter listItemAdapter = new SimpleAdapter(this, mDataList, R.layout.route_item
@@ -36,7 +40,6 @@ public class SelectRouteActivity extends AppCompatActivity{
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 // TODO ON CLICK
-
                 Intent intent = new Intent(SelectRouteActivity.this, MapsActivity.class);
                 setResult(android.app.Activity.RESULT_OK,intent);
                 finish();
@@ -46,19 +49,15 @@ public class SelectRouteActivity extends AppCompatActivity{
 
 
     public void setUpData(){
-        Map<String,Object> map = new HashMap<String,Object>();
-        map.put("routeId", "61A");
-        map.put("stopName", "From Fifth at Craig");
-        map.put("eta", "Arriving in 5 mins");
-        map.put("image", R.drawable.bus_stop);
-        mDataList.add(map);
 
-        map = new HashMap<String,Object>();
-        map.put("routeId", "71A");
-        map.put("stopName", "From Centre at Craig");
-        map.put("eta", "Arriving in 13 mins");
-        map.put("image", R.drawable.bus_stop);
-        mDataList.add(map);
+       for(StopRoute stopRoute : topStopsList) {
+           Map<String, Object> map = new HashMap<String, Object>();
+           map.put("routeId", stopRoute.getRouteId());
+           map.put("stopName", stopRoute.getArrStop() + "to" + stopRoute.getDestStop());
+           map.put("eta", "Arriving in " + stopRoute.getEta() + " min " + "\nBus time is : " + stopRoute.getBusTime());
+           map.put("image", R.drawable.bus_stop);
+           mDataList.add(map);
+       }
 
 
     }

@@ -17,6 +17,7 @@ public class RoutesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         /** Inflating the layout for this fragment **/
         View v = inflater.inflate(R.layout.route_fragment_layout, null);
+
         return v;
     }
 }

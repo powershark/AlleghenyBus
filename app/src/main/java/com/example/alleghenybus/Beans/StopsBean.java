@@ -9,14 +9,13 @@ public class StopsBean {
     private String stpName;
     private double latitute;
     private double lontitute;
-    private List<String> routes;
+
 
     public StopsBean(String stpId, String stpName, double latitute, double lontitute, List<String> routes){
         this.stpId = stpId;
         this.stpName = stpName;
         this.latitute = latitute;
         this.lontitute = lontitute;
-        this.routes = routes;
     }
 
     public double getLatitute() {
@@ -51,12 +50,4 @@ public class StopsBean {
         this.stpId = stpId;
     }
 
-
-    public List<String> getRoutes() {
-        return routes;
-    }
-
-    public void setRoutes(List<String> routes) {
-        this.routes = routes;
-    }
 }

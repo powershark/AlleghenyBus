@@ -1,36 +1,9 @@
 package com.example.alleghenybus.Activities;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-import com.example.alleghenybus.Utils.PermissionUtils;
-import com.example.alleghenybus.R;
-import com.example.alleghenybus.Beans.RoutesBean;
-import com.example.alleghenybus.Beans.StopsBean;
-import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
-import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
-import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
-
 import android.Manifest;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -38,6 +11,7 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -46,15 +20,53 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.alleghenybus.Beans.StopRoute;
+import com.example.alleghenybus.Beans.StopsBean;
+import com.example.alleghenybus.R;
+import com.example.alleghenybus.Utils.AppPreference;
+import com.example.alleghenybus.Utils.PermissionUtils;
+import com.example.alleghenybus.Xmlparser.GetStopsXmlParser;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.TileOverlay;
+
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Serializable;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -84,11 +96,16 @@ public class MapsActivity extends AppCompatActivity
      */
     private boolean mPermissionDenied = false;
     private GoogleMap mMap;
-    private List<RoutesBean> routeList;
-    private List<StopsBean> stopList = new ArrayList<StopsBean>();
+    private List<StopsBean> stopList = new ArrayList<>();
     private Marker mSelectedMarker;
     private Map<Marker,StopsBean> stopMarkerMap = new HashMap<>();
     private List<Marker> stopMarkerList = new ArrayList<>();
+    private List<Marker> destMarkerList;
+    private List<Marker> srcMarkerList;
+    List<StopRoute> destStopRoutesList;
+    List<StopRoute> srcStopRoutesList;
+    private List<StopRoute> topStopsList;
+    private Location myLocation;
     private FloatingActionButton fab;
 
     @Override
@@ -124,6 +141,39 @@ public class MapsActivity extends AppCompatActivity
                 marker.setSnippet(place.getName().toString());
                 marker.setTitle(place.getName().toString());
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng()));
+
+                destMarkerList = new ArrayList<>();
+                srcMarkerList = new ArrayList<>();
+
+                Location destLocation = new Location("destLocation");
+                destLocation.setLatitude(marker.getPosition().latitude);
+                destLocation.setLongitude(marker.getPosition().longitude);
+
+                for(Marker m : stopMarkerList){
+                    Location stopLocation = new Location("stopLocation");
+                    stopLocation.setLatitude( m.getPosition().latitude);
+                    stopLocation.setLongitude(m.getPosition().longitude);
+                    if (destLocation.distanceTo(stopLocation)<400){
+                        destMarkerList.add(m);
+                    }
+                    if(myLocation.distanceTo(stopLocation)<400){
+                        srcMarkerList.add(m);
+                    }
+
+                }
+
+                Log.e("stopsList", destMarkerList.toString());
+                Log.e("srcList", srcMarkerList.toString());
+
+
+                TopRoutesTask topRoutesTask = new TopRoutesTask();
+                //ProgressDialog.show(getBaseContext(),"q","q",false);
+                topRoutesTask.execute(destMarkerList, srcMarkerList);
+
+                //Log.e("topStopsList", topStopsList.toString());
+
+
+                // Add fragment
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 if(routesFragment==null) {
                     routesFragment = new RoutesFragment();
@@ -142,14 +192,14 @@ public class MapsActivity extends AppCompatActivity
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
-
-
-
     }
+
+
 
     //Jump to RouteSelect activity
     public void onRecommendRouteFragmentClicked(View v){
         Intent intent = new Intent(MapsActivity.this,SelectRouteActivity.class);
+        intent.putExtra("topStopsList", (Serializable) topStopsList);
         startActivityForResult(intent,1);
     }
 
@@ -192,10 +242,10 @@ public class MapsActivity extends AppCompatActivity
         // Gets all bus stops on the map
         renderAllStops();
 
-        mMap.setOnCameraMoveStartedListener(new GoogleMap.OnCameraMoveStartedListener() {
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
-            public void onCameraMoveStarted(int i) {
-                if(mMap.getCameraPosition().zoom<17.00){
+            public void onCameraIdle() {
+                if(mMap.getCameraPosition().zoom<16.00){
                     for (Marker m : stopMarkerList){
                         m.setVisible(false);
                     }
@@ -207,6 +257,10 @@ public class MapsActivity extends AppCompatActivity
                 Log.e("ZOOM", String.valueOf(mMap.getCameraPosition().zoom));
             }
         });
+
+
+
+
     }
 
 
@@ -237,16 +291,17 @@ public class MapsActivity extends AppCompatActivity
      * @param stop type StopBean
      */
     private void addMarkersToMap(StopsBean stop) {
-        List<String> routes = stop.getRoutes();
-        StringBuilder snip = new StringBuilder("Routes: ");
-        for(String s : routes){
-            snip.append(s + ", ");
-        }
-        snip.delete(snip.length() - 2, snip.length());
-
+//        List<String> routes = stop.getRoutes();
+//        StringBuilder snip = new StringBuilder("Routes: ");
+//        for(String s : routes){
+//            snip.append(s + ", ");
+//        }
+//        snip.delete(snip.length() - 2, snip.length());
         Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(stop.getLatitute(), stop.getLontitute()))
                 .title(stop.getStpName()));
+//        marker.setSnippet(snip.toString());
+        marker.setIcon(BitmapDescriptorFactory.fromAsset("bus_marker.png"));
         marker.setTag("bus_stops");
         stopMarkerList.add(marker);
         stopMarkerMap.put(marker,stop);
@@ -275,8 +330,6 @@ public class MapsActivity extends AppCompatActivity
             // Add the request to the RequestQueue.
             queue.add(stringRequest);
         }
-
-        Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
     }
 
     //Get info of routes&stops.xml and mark the stops.xml
@@ -334,10 +387,10 @@ public class MapsActivity extends AppCompatActivity
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             }
-            Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (location != null) {
-                currentLatitude = location.getLatitude();
-                currentLongitude = location.getLongitude();
+            myLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (myLocation != null) {
+                currentLatitude = myLocation.getLatitude();
+                currentLongitude = myLocation.getLongitude();
             }
         } else {
             LocationListener locationListener = new LocationListener() {
@@ -367,10 +420,10 @@ public class MapsActivity extends AppCompatActivity
                 }
             };
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);
-            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            if (location != null) {
-                currentLatitude = location.getLatitude();
-                currentLongitude = location.getLongitude();
+            myLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (myLocation != null) {
+                currentLatitude = myLocation.getLatitude();
+                currentLongitude = myLocation.getLongitude();
             }
         }
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
@@ -413,5 +466,140 @@ public class MapsActivity extends AppCompatActivity
                 .newInstance(true).show(getSupportFragmentManager(), "dialog");
     }
 
+
+
+
+    private class TopRoutesTask extends AsyncTask<List<Marker>, Integer, List<StopRoute>> {
+
+        protected List<StopRoute> doInBackground(List<Marker>... lists) {
+            topStopsList = new ArrayList<StopRoute>();
+            return calculateTopStops(lists[0],lists[1]);
+        }
+
+        @Override
+        protected void onPostExecute(List<StopRoute> stopRoutes) {
+            super.onPostExecute(stopRoutes);
+            Log.e("topStopsList", topStopsList.toString());
+        }
+
+        public List<StopRoute> calculateTopStops(List<Marker> destMarkerList, List<Marker>srcMarkerList){
+            srcStopRoutesList = new ArrayList<>();
+            destStopRoutesList = new ArrayList<>();
+            for(Marker m : destMarkerList) {
+                String url = "http://realtime.portauthority.org/bustime/api/v3/getpredictions?key=5fYCfDAUi4ZteFN5bFpH9JRwW&stpid=" + stopMarkerMap.get(m).getStpId() + "&rtpidatafeed=Port%20Authority%20Bus";
+                try {
+                    String xml = sendGet(url);
+                    setUpData(xml, destStopRoutesList, stopMarkerMap.get(m).getStpName());
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+            for(Marker m : srcMarkerList){
+                String url ="http://realtime.portauthority.org/bustime/api/v3/getpredictions?key=5fYCfDAUi4ZteFN5bFpH9JRwW&stpid="+stopMarkerMap.get(m).getStpId()+"&rtpidatafeed=Port%20Authority%20Bus";
+                try {
+                    String xml = sendGet(url);
+                    setUpData(xml, srcStopRoutesList, stopMarkerMap.get(m).getStpName());
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+            //ProgressDialog.show(this, "Loading", "Wait while loading...");
+
+
+            Log.e("srcStopList",srcStopRoutesList.toString());
+            Log.e("destStopList",destStopRoutesList.toString());
+
+
+            for(StopRoute srcRoute : srcStopRoutesList){
+                for(StopRoute destRoute : destStopRoutesList){
+                    if(srcRoute.equals(destRoute)){
+                        srcRoute.setDestStop(destRoute.getArrStop());
+                        int busTime = Integer.parseInt(destRoute.getEta()) - Integer.parseInt(srcRoute.getEta());
+                        if(busTime <= 0 || srcRoute.getArrStop().equals(srcRoute.getDestStop())) continue;
+                        srcRoute.setBusTime(String.valueOf(busTime));
+                        topStopsList.add(srcRoute);
+                        break;
+                    }
+                }
+            }
+                Log.e("topinThread",topStopsList.toString());
+            return topStopsList;
+        }
+
+        public void setUpData(String xmlResponse, List<StopRoute> finalList, String stopName) throws XmlPullParserException, IOException {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            StopRoute stopRoute = null;
+            String text = null;
+            XmlPullParser xpp = factory.newPullParser();
+            xpp.setInput( new StringReader(xmlResponse));
+            int eventType = xpp.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String tagname = xpp.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        if (tagname.equalsIgnoreCase("prd")) {
+                            stopRoute = new StopRoute();
+                            Log.e("**", stopName);
+                            stopRoute.setArrStop(new String(stopName));
+                        }
+                        break;
+
+                    case XmlPullParser.TEXT:
+                        text = xpp.getText();
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if (tagname.equalsIgnoreCase("rt")) {
+                            stopRoute.setRouteId(text);
+                        } else if (tagname.equalsIgnoreCase("rtdir")) {
+                            stopRoute.setDirection(text);
+
+                        } else if (tagname.equalsIgnoreCase("vid")) {
+                            stopRoute.setVid(text);
+                        } else if (tagname.equalsIgnoreCase("prdctdn")){
+                            if (text.equalsIgnoreCase("due"))
+                                stopRoute.setEta("0");
+                            else stopRoute.setEta(text);
+                        }else if (tagname.equalsIgnoreCase("prd")){
+                                finalList.add(stopRoute);
+                        }
+                    default:
+                        break;
+                }
+                eventType = xpp.next();
+
+            }
+//            Log.e("srcStopList",srcStopRoutesList.toString());
+//            Log.e("destStopList",destStopRoutesList.toString());
+        }
+    }
+
+    private String sendGet(String url) throws Exception {
+
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // optional default is GET
+        con.setRequestMethod("GET");
+
+        //add request header
+        int responseCode = con.getResponseCode();
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        //print result
+        return response.toString();
+    }
 }
 
