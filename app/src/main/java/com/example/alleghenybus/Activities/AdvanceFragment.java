@@ -27,14 +27,15 @@ public class AdvanceFragment extends DialogFragment implements TimePickerDialog.
         // Use the current time as the default values for the picker
         int hour = 0;
         int minute = 30;
-
+        TimePickerDialog t = new TimePickerDialog(getActivity(), this, hour, minute, true);
+        t.setTitle("Preparation Time Before Bus Arrival");
         // Create a new instance of TimePickerDialog and return it
-        return new TimePickerDialog(getActivity(), this, hour, minute, true);
+        return t;
     }
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        Toast.makeText(getActivity(), "Gocha!\nWill ring " + minute + " minutes before the bus", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Gocha!\nWill Ring " + minute + " Minutes Before Bus Arrival", Toast.LENGTH_SHORT).show();
 
     }
 }

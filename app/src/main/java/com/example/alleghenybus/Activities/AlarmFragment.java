@@ -30,14 +30,16 @@ public class AlarmFragment extends DialogFragment implements TimePickerDialog.On
         int hour = c.get(Calendar.HOUR_OF_DAY);
         int minute = c.get(Calendar.MINUTE);
 
-        // Create a new instance of TimePickerDialog and return it
-        return new TimePickerDialog(getActivity(), this, hour, minute,
+        TimePickerDialog t = new TimePickerDialog(getActivity(), this, hour, minute,
                 DateFormat.is24HourFormat(getActivity()));
+        t.setTitle("Catch Bus Before");
+        // Create a new instance of TimePickerDialog and return it
+        return t;
     }
 
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        Toast.makeText(getActivity(), "Gocha!\nBus right before " + hourOfDay + " : " + minute, Toast.LENGTH_SHORT).show();
+        Toast.makeText(getActivity(), "Gocha!\nBus Right Before " + hourOfDay + " : " + minute, Toast.LENGTH_SHORT).show();
         DialogFragment newFragment = new AdvanceFragment();
         newFragment.show(getFragmentManager(), "Advance");
     }
