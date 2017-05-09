@@ -262,9 +262,9 @@ public class MapsActivity extends AppCompatActivity
                         @Override
                         public void onResponse(String response) {
                             // Display the first 500 characters of the response string.
-                            Intent stopRoutesIntent = new Intent(getBaseContext(),PredictionActivity.class);
+                            Intent stopRoutesIntent = new Intent(MapsActivity.this,PredictionActivity.class);
                             stopRoutesIntent.putExtra("xmlResponse",response);
-                            getBaseContext().startActivity(stopRoutesIntent);
+                            MapsActivity.this.startActivity(stopRoutesIntent);
                         }
                     }, new Response.ErrorListener() {
                 @Override
